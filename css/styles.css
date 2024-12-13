@@ -1,0 +1,43 @@
+body {
+    margin: 0;
+    padding: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+h1 {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+#map {
+    height: 600px;
+    width: 100%;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+#info-panel {
+    background: #f5f5f5;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.marker-icon {
+    font-size: 24px;
+    text-align: center;
+    line-height: 20px;
+}
+
+.marker-icon.active {
+    color: #4CAF50;
+}
+
+.marker-icon.closed {
+    color: #f44336;
+}

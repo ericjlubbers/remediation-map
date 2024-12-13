@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colorado Remediation Projects Map</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- Leaflet JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Colorado Remediation Projects</h1>
+        <div id="map"></div>
+        <div id="info-panel">
+            <h2>Site Information</h2>
+            <div id="site-info">Select a site to view details</div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize the map
+        const map = L.map('map').setView([40.5, -104.5], 8);
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Fetch and display data
+        fetch('data/remediation_projects.json')
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(site => {
+                    if (site.Lattitude && site.Longitude) {
+                        const marker = L.marker([site.Lattitude, site.Longitude], {
+                            icon: L.divIcon({
+                                className: `marker-icon ${site.ProjectStatus.toLowerCase()}`,
+                                html: '•',
+                                iconSize: [20, 20]
+                            })
+                        }).addTo(map);
+
+                        marker.on('click', () => {
+                            document.getElementById('site-info').innerHTML = `
+                                <p><strong>Site:</strong> ${site["Site\nName"] || "Unnamed Site"}</p>
+                                <p><strong>Status:</strong> ${site.ProjectStatus}</p>
+                                <p><strong>Operator:</strong> ${site.Operator}</p>
+                                <p><strong>Municipality:</strong> ${site.Municipality}</p>
+                                <p><strong>Date Opened:</strong> ${site["Date\nOpened"]}</p>
+                                ${site["Date\nClosed"] ? `<p><strong>Date Closed:</strong> ${site["Date\nClosed"]}</p>` : ''}
+                            `;
+                        });
+                    }
+                });
+            })
+            .catch(error => console.error('Error loading data:', error));
+    </script>
+</body>
+</html>
