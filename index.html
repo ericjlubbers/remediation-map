@@ -4,65 +4,59 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Colorado Remediation Projects Map</title>
-    
-    <!-- Google Fonts -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@200;400;700&display=swap">
-    
-    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
-    <!-- Custom CSS -->
     <link rel="stylesheet" href="css/styles.css">
-    
-    <!-- Leaflet JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js"></script>
 </head>
 <body>
     <div class="container">
         <h1>Colorado Remediation Projects</h1>
+        <p class="chatter">Chatter text goes here - add your descriptive text about the visualization</p>
         <div id="map"></div>
-        <div class="source-line">Source: Colorado Oil and Gas Conservation Commission</div>
+        <div class="footer">
+            <span class="source">Source: Colorado Oil and Gas Conservation Commission</span>
+            <a href="https://coloradosun.com" class="logo">
+                <img src="https://i0.wp.com/newspack-coloradosun.s3.amazonaws.com/wp-content/uploads/2024/11/cropped-black-text-transparent-bg.png" alt="Colorado Sun Logo">
+            </a>
+        </div>
     </div>
     
     <script>
-        // Initialize the map
         const map = L.map('map');
         
-        // Add CartoDB basemap
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
             maxZoom: 20,
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-            subdomains: 'abcd',
-            maxZoom: 20
+            subdomains: 'abcd'
         }).addTo(map);
         
-        // Style for county boundaries
-        const countyStyle = {
-            color: '#666',
-            weight: 2,
+        const countyStyle = feature => ({
+            color: feature.properties.name === 'Weld' ? '#000' : '#666',
+            weight: feature.properties.name === 'Weld' ? 3 : 2,
             opacity: 0.8,
-            fillOpacity: 0,
+            fillOpacity: feature.properties.name === 'Weld' ? 0 : 0.1,
             interactive: false
-        };
+        });
         
-        // Custom marker styles
         const siteStyles = {
             active: {
-                radius: 8,
+                radius: 5,
                 color: '#000',
                 weight: 2,
                 fillColor: '#2563eb',
                 fillOpacity: 0.9
             },
             closed: {
-                radius: 8,
+                radius: 5,
                 color: '#000',
                 weight: 2,
-                fillColor: '#ea580c',
-                fillOpacity: 0.9
+                fillColor: '#fff',
+                fillOpacity: 0.7
             }
         };
         
-        // Add counties first
         fetch('data/colorado-counties.json')
         .then(response => response.json())
         .then(counties => {
@@ -70,21 +64,28 @@
                 style: countyStyle
             }).addTo(map);
             
-            // Add county labels
             counties.features.forEach(county => {
-                const center = L.geoJSON(county).getBounds().getCenter();
-                L.marker(center, {
+                const bounds = L.geoJSON(county).getBounds();
+                const center = turf.centerOfMass(county).geometry.coordinates;
+                
+                const label = L.marker([center[1], center[0]], {
                     icon: L.divIcon({
                         className: 'county-label',
-                        html: `<div style="font-family: 'Libre Franklin', sans-serif; font-weight: 600; font-size: 14px; color: #8e9da9; text-transform: uppercase; text-align: center;">${county.properties.name}</div>`,
+                        html: `<div>${county.properties.name}</div>`,
                         iconSize: [120, 20],
                         iconAnchor: [60, 10]
                     })
                 }).addTo(map);
+                
+                map.on('zoomend', () => {
+                    const countyPixelBounds = bounds.toBBoxString().split(',').map(Number);
+                    const width = Math.abs(countyPixelBounds[2] - countyPixelBounds[0]);
+                    const height = Math.abs(countyPixelBounds[3] - countyPixelBounds[1]);
+                    label.getElement().style.display = width < 100 || height < 50 ? 'none' : 'block';
+                });
             });
         });
         
-        // Add remediation sites
         fetch('data/remediation_projects.json')
         .then(response => response.json())
         .then(data => {
@@ -93,53 +94,43 @@
             data.forEach(site => {
                 if (site.Lattitude && site.Longitude) {
                     const marker = L.circleMarker(
-                    [site.Lattitude, site.Longitude],
-                    siteStyles[site.ProjectStatus.toLowerCase()]
+                        [site.Lattitude, site.Longitude],
+                        siteStyles[site.ProjectStatus.toLowerCase()]
                     ).addTo(map);
                     
                     bounds.extend([site.Lattitude, site.Longitude]);
                     
-                    const popupContent = `
-                            <div style="font-family: 'Libre Franklin', sans-serif; font-weight: 400;">
-                                <h3 style="margin: 0 0 10px 0; font-weight: 700;">${site["Site\nName"] || "Unnamed Site"}</h3>
-                                <p style="margin: 5px 0;"><strong>Status:</strong> ${site.ProjectStatus}</p>
-                                <p style="margin: 5px 0;"><strong>Operator:</strong> ${site.Operator}</p>
-                                <p style="margin: 5px 0;"><strong>Municipality:</strong> ${site.Municipality}</p>
-                                <p style="margin: 5px 0;"><strong>Date Opened:</strong> ${site["Date\nOpened"]}</p>
-                                ${site["Date\nClosed"] ? `<p style="margin: 5px 0;"><strong>Date Closed:</strong> ${site["Date\nClosed"]}</p>` : ''}
-                            </div>
-                        `;
+                    marker.bindPopup(`
+                        <div class="popup-content">
+                            <h3>${site["Site\nName"] || "Unnamed Site"}</h3>
+                            <p><strong>Status:</strong> ${site.ProjectStatus}</p>
+                            <p><strong>Operator:</strong> ${site.Operator}</p>
+                            <p><strong>Municipality:</strong> ${site.Municipality}</p>
+                            <p><strong>Date Opened:</strong> ${site["Date\nOpened"]}</p>
+                            ${site["Date\nClosed"] ? `<p><strong>Date Closed:</strong> ${site["Date\nClosed"]}</p>` : ''}
+                        </div>
+                    `);
                     
-                    marker.bindPopup(popupContent);
                     marker.on('mouseover', function(e) {
                         this.openPopup();
                     });
                 }
             });
             
-            // Fit map to remediation sites
             map.fitBounds(bounds, { padding: [20, 20] });
         });
         
-        // Add legend
         const legend = L.control({ position: 'bottomright' });
         legend.onAdd = function(map) {
-            const div = L.DomUtil.create('div', 'info legend');
-            div.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-            div.style.padding = '10px';
-            div.style.borderRadius = '4px';
-            div.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
-            div.style.fontFamily = "'Libre Franklin', sans-serif";
-            div.style.fontSize = '14px';
-            
+            const div = L.DomUtil.create('div', 'legend');
             div.innerHTML = `
-                <h4 style="margin: 0 0 8px 0; font-weight: 700;">Site Status</h4>
-                <div style="margin-bottom: 5px;">
-                    <span style="display: inline-block; width: 16px; height: 16px; border-radius: 50%; background-color: #2563eb; border: 2px solid #000; margin-right: 8px;"></span>
+                <h4>Site Status</h4>
+                <div class="legend-item">
+                    <span class="legend-marker active"></span>
                     Active
                 </div>
-                <div>
-                    <span style="display: inline-block; width: 16px; height: 16px; border-radius: 50%; background-color: #ea580c; border: 2px solid #000; margin-right: 8px;"></span>
+                <div class="legend-item">
+                    <span class="legend-marker closed"></span>
                     Closed
                 </div>
             `;

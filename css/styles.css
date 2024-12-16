@@ -1,11 +1,19 @@
-/* IMPORT GOOGLE FONTS */
-
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=Libre+Franklin:ital,wght@0,100..900;1,100..900&family=Martel:wght@200;300;400;600;700;800;900&display=swap');
+:root {
+    --font-primary: 'Libre Franklin', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+    --color-text-primary: #333;
+    --color-text-secondary: #666;
+    --color-background: #fff;
+    --color-marker-active: #2563eb;
+    --color-marker-closed: #fff;
+    --spacing-base: 20px;
+    --border-radius: 8px;
+}
 
 body {
     margin: 0;
-    padding: 20px;
-    font-family: 'Libre Franklin',-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    padding: var(--spacing-base);
+    font-family: var(--font-primary);
 }
 
 .container {
@@ -13,49 +21,97 @@ body {
     margin: 0 auto;
 }
 
-p {
-    line-height: 1.5em;
-    font-family: 'Libre Franklin',-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-}
-
 h1 {
     font-weight: 700;
-    color: #333;
-    margin-bottom: 20px;
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-base);
 }
 
-h2 {
-    font-family: 'Libre Franklin',-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    font-weight: 700;
-    color: #333;
-    margin-bottom: 20px;
+.chatter {
+    margin-bottom: var(--spacing-base);
+    line-height: 1.5;
 }
 
 #map {
     height: 600px;
     width: 100%;
-    border-radius: 8px;
-    margin-bottom: 20px;
+    border-radius: var(--border-radius);
+    margin-bottom: var(--spacing-base);
 }
 
-#info-panel {
-    font-family:'Ibm Plex Mono', monospace;
-    background: #f5f5f5;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+.footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.marker-icon {
-    font-size: 24px;
+.source {
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    font-size: 0.9em;
+}
+
+.logo img {
+    height: 30px;
+    width: auto;
+}
+
+.county-label {
+    font-family: var(--font-primary);
+    font-weight: 600;
+    font-size: 14px;
+    color: #8e9da9;
+    text-transform: uppercase;
     text-align: center;
-    line-height: 20px;
 }
 
-.marker-icon.active {
-    color: #4CAF50;
+.legend {
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: var(--spacing-base);
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    font-family: var(--font-primary);
+    font-size: 14px;
 }
 
-.marker-icon.closed {
-    color: #f44336;
+.legend h4 {
+    margin: 0 0 8px 0;
+    font-weight: 700;
+}
+
+.legend-item {
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+}
+
+.legend-marker {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid #000;
+    margin-right: 8px;
+}
+
+.legend-marker.active {
+    background-color: var(--color-marker-active);
+}
+
+.legend-marker.closed {
+    background-color: var(--color-marker-closed);
+}
+
+.popup-content {
+    font-family: var(--font-primary);
+    font-weight: 400;
+}
+
+.popup-content h3 {
+    margin: 0 0 10px 0;
+    font-weight: 700;
+}
+
+.popup-content p {
+    margin: 5px 0;
 }
