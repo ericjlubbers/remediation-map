@@ -54,6 +54,7 @@ h1 {
 .logo img {
     height: 30px;
     width: auto;
+    max-width: 200px;
 }
 
 .county-label {
@@ -63,6 +64,11 @@ h1 {
     color: #8e9da9;
     text-transform: uppercase;
     text-align: center;
+}
+
+.county-label.weld-county {
+    font-size: 16px;
+    font-weight: 700;
 }
 
 .legend {
@@ -90,7 +96,7 @@ h1 {
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    border: 2px solid #000;
+    border: 2px solid #666;
     margin-right: 8px;
 }
 
