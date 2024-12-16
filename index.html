@@ -6,7 +6,7 @@
     <title>Colorado Remediation Projects Map</title>
     
     <!-- Google Fonts -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=Libre+Franklin:ital,wght@0,100..900;1,100..900&family=Martel:wght@200;300;400;600;700;800;900&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@200;400;700&display=swap">
     
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
@@ -20,52 +20,46 @@
     <div class="container">
         <h1>Colorado Remediation Projects</h1>
         <div id="map"></div>
-        <div id="info-panel">
-            <h2>Site Information</h2>
-            <div id="site-info">Select a site to view details</div>
-            <div class="source-line">Source: Colorado Oil and Gas Conservation Commission</div>
-        </div>
+        <div class="source-line">Source: Colorado Oil and Gas Conservation Commission</div>
     </div>
 
     <script>
-        // Initialize the map without a center/zoom (we'll set these after loading the data)
+        // Initialize the map
         const map = L.map('map');
 
-        // Add OpenStreetMap tiles
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
+        // Add Stadia.StamenWatercolor tiles
+        L.tileLayer('https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg', {
+            attribution: '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://www.stamen.com/" target="_blank">Stamen Design</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
         // Style for county boundaries
         const countyStyle = {
             color: '#666',
-            weight: 1,
+            weight: 2,
             opacity: 0.8,
             fillOpacity: 0,
             interactive: false
         };
 
-        // Custom marker styles for better accessibility
+        // Custom marker styles
         const siteStyles = {
             active: {
                 radius: 8,
                 color: '#000',
                 weight: 2,
                 fillColor: '#2563eb',
-                fillOpacity: 0.9,
-                fillPattern: 'circle'
+                fillOpacity: 0.9
             },
             closed: {
                 radius: 8,
                 color: '#000',
                 weight: 2,
                 fillColor: '#ea580c',
-                fillOpacity: 0.9,
-                fillPattern: 'cross'
+                fillOpacity: 0.9
             }
         };
 
-        // Add counties first (they'll be on the bottom layer)
+        // Add counties first
         fetch('data/colorado-counties.json')
             .then(response => response.json())
             .then(counties => {
@@ -79,15 +73,15 @@
                     L.marker(center, {
                         icon: L.divIcon({
                             className: 'county-label',
-                            html: `<div style="background-color: rgba(255,255,255,0.7); padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #666; font-weight: bold;">${county.properties.name}</div>`,
-                            iconSize: [100, 20],
-                            iconAnchor: [50, 10]
+                            html: `<div style="font-family: 'Libre Franklin', sans-serif; font-weight: 200; font-size: 14px; color: #fff; text-transform: uppercase; text-align: center; text-shadow: -1px -1px 0 #666, 1px -1px 0 #666, -1px 1px 0 #666, 1px 1px 0 #666;">${county.properties.name}</div>`,
+                            iconSize: [120, 20],
+                            iconAnchor: [60, 10]
                         })
                     }).addTo(map);
                 });
             });
 
-        // Then add remediation sites (they'll be on top)
+        // Add remediation sites
         fetch('data/remediation_projects.json')
             .then(response => response.json())
             .then(data => {
@@ -102,15 +96,20 @@
 
                         bounds.extend([site.Lattitude, site.Longitude]);
 
-                        marker.on('click', () => {
-                            document.getElementById('site-info').innerHTML = `
-                                <p><strong>Site:</strong> ${site["Site\nName"] || "Unnamed Site"}</p>
-                                <p><strong>Status:</strong> ${site.ProjectStatus}</p>
-                                <p><strong>Operator:</strong> ${site.Operator}</p>
-                                <p><strong>Municipality:</strong> ${site.Municipality}</p>
-                                <p><strong>Date Opened:</strong> ${site["Date\nOpened"]}</p>
-                                ${site["Date\nClosed"] ? `<p><strong>Date Closed:</strong> ${site["Date\nClosed"]}</p>` : ''}
-                            `;
+                        const popupContent = `
+                            <div style="font-family: 'Libre Franklin', sans-serif; font-weight: 400;">
+                                <h3 style="margin: 0 0 10px 0; font-weight: 700;">${site["Site\nName"] || "Unnamed Site"}</h3>
+                                <p style="margin: 5px 0;"><strong>Status:</strong> ${site.ProjectStatus}</p>
+                                <p style="margin: 5px 0;"><strong>Operator:</strong> ${site.Operator}</p>
+                                <p style="margin: 5px 0;"><strong>Municipality:</strong> ${site.Municipality}</p>
+                                <p style="margin: 5px 0;"><strong>Date Opened:</strong> ${site["Date\nOpened"]}</p>
+                                ${site["Date\nClosed"] ? `<p style="margin: 5px 0;"><strong>Date Closed:</strong> ${site["Date\nClosed"]}</p>` : ''}
+                            </div>
+                        `;
+
+                        marker.bindPopup(popupContent);
+                        marker.on('mouseover', function(e) {
+                            this.openPopup();
                         });
                     }
                 });
@@ -123,14 +122,15 @@
         const legend = L.control({ position: 'bottomright' });
         legend.onAdd = function(map) {
             const div = L.DomUtil.create('div', 'info legend');
-            div.style.backgroundColor = 'white';
+            div.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
             div.style.padding = '10px';
             div.style.borderRadius = '4px';
             div.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
-            div.style.fontFamily = "'IBM Plex Mono', monospace";
+            div.style.fontFamily = "'Libre Franklin', sans-serif";
+            div.style.fontSize = '14px';
 
             div.innerHTML = `
-                <h4 style="margin: 0 0 8px 0;">Site Status</h4>
+                <h4 style="margin: 0 0 8px 0; font-weight: 700;">Site Status</h4>
                 <div style="margin-bottom: 5px;">
                     <span style="display: inline-block; width: 16px; height: 16px; border-radius: 50%; background-color: #2563eb; border: 2px solid #000; margin-right: 8px;"></span>
                     Active
