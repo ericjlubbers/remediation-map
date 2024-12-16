@@ -73,9 +73,15 @@ h1 {
 }
 
 .county-label.weld-county {
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 700;
     color: #666;
+    text-shadow: 
+    -1px -1px 0 #fcd232,
+    1px -1px 0 #fcd232,
+    -1px 1px 0 #fcd232,
+    1px 1px 0 #fcd232,
+    0 2px 4px rgba(0,0,0,0.2);
 }
 
 .legend {
