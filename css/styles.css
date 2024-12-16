@@ -64,11 +64,18 @@ h1 {
     color: #8e9da9;
     text-transform: uppercase;
     text-align: center;
+    text-shadow: 
+        -1px -1px 0 #fff,
+        1px -1px 0 #fff,
+        -1px 1px 0 #fff,
+        1px 1px 0 #fff,
+        0 2px 4px rgba(0,0,0,0.2);
 }
 
 .county-label.weld-county {
     font-size: 16px;
     font-weight: 700;
+    color: #666;
 }
 
 .legend {

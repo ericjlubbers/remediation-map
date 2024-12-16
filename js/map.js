@@ -7,27 +7,28 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png
 }).addTo(map);
 
 const countyStyle = feature => ({
-    color: '#8e9da9',
+    color: '#666',
     weight: feature.properties.name === 'Weld' ? 3 : 2,
     opacity: 1,
     fillOpacity: feature.properties.name === 'Weld' ? 0 : 0.25,
+    fillColor: '#000',
     interactive: false
 });
 
 const siteStyles = {
     active: {
-        radius: 4,
+        radius: 5,
         color: '#666',
-        weight: 1,
+        weight: 2,
         fillColor: '#2563eb',
         fillOpacity: 0.9
     },
     closed: {
         radius: 5,
         color: '#666',
-        weight: 1,
+        weight: 2,
         fillColor: '#fff',
-        fillOpacity: 0.25
+        fillOpacity: 0.7
     }
 };
 
