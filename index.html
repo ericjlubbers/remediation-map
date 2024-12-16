@@ -28,7 +28,7 @@
         const map = L.map('map');
         
         // Add CartoDB basemap
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
             maxZoom: 20,
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
             subdomains: 'abcd',
@@ -76,7 +76,7 @@
                 L.marker(center, {
                     icon: L.divIcon({
                         className: 'county-label',
-                        html: `<div style="font-family: 'Libre Franklin', sans-serif; font-weight: 200; font-size: 14px; color: #fff; text-transform: uppercase; text-align: center; text-shadow: -1px -1px 0 #666, 1px -1px 0 #666, -1px 1px 0 #666, 1px 1px 0 #666;">${county.properties.name}</div>`,
+                        html: `<div style="font-family: 'Libre Franklin', sans-serif; font-weight: 200; font-size: 14px; color: #8e9da9; text-transform: uppercase; text-align: center;">${county.properties.name}</div>`,
                         iconSize: [120, 20],
                         iconAnchor: [60, 10]
                     })
