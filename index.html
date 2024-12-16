@@ -22,16 +22,19 @@
         <div id="map"></div>
         <div class="source-line">Source: Colorado Oil and Gas Conservation Commission</div>
     </div>
-
+    
     <script>
         // Initialize the map
         const map = L.map('map');
-
-        // Add Stadia.StamenWatercolor tiles
-        L.tileLayer('https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg', {
-            attribution: '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://www.stamen.com/" target="_blank">Stamen Design</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        
+        // Add CartoDB basemap
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            maxZoom: 20,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 20
         }).addTo(map);
-
+        
         // Style for county boundaries
         const countyStyle = {
             color: '#666',
@@ -40,7 +43,7 @@
             fillOpacity: 0,
             interactive: false
         };
-
+        
         // Custom marker styles
         const siteStyles = {
             active: {
@@ -58,45 +61,45 @@
                 fillOpacity: 0.9
             }
         };
-
+        
         // Add counties first
         fetch('data/colorado-counties.json')
-            .then(response => response.json())
-            .then(counties => {
-                L.geoJSON(counties, {
-                    style: countyStyle
+        .then(response => response.json())
+        .then(counties => {
+            L.geoJSON(counties, {
+                style: countyStyle
+            }).addTo(map);
+            
+            // Add county labels
+            counties.features.forEach(county => {
+                const center = L.geoJSON(county).getBounds().getCenter();
+                L.marker(center, {
+                    icon: L.divIcon({
+                        className: 'county-label',
+                        html: `<div style="font-family: 'Libre Franklin', sans-serif; font-weight: 200; font-size: 14px; color: #fff; text-transform: uppercase; text-align: center; text-shadow: -1px -1px 0 #666, 1px -1px 0 #666, -1px 1px 0 #666, 1px 1px 0 #666;">${county.properties.name}</div>`,
+                        iconSize: [120, 20],
+                        iconAnchor: [60, 10]
+                    })
                 }).addTo(map);
-
-                // Add county labels
-                counties.features.forEach(county => {
-                    const center = L.geoJSON(county).getBounds().getCenter();
-                    L.marker(center, {
-                        icon: L.divIcon({
-                            className: 'county-label',
-                            html: `<div style="font-family: 'Libre Franklin', sans-serif; font-weight: 200; font-size: 14px; color: #fff; text-transform: uppercase; text-align: center; text-shadow: -1px -1px 0 #666, 1px -1px 0 #666, -1px 1px 0 #666, 1px 1px 0 #666;">${county.properties.name}</div>`,
-                            iconSize: [120, 20],
-                            iconAnchor: [60, 10]
-                        })
-                    }).addTo(map);
-                });
             });
-
+        });
+        
         // Add remediation sites
         fetch('data/remediation_projects.json')
-            .then(response => response.json())
-            .then(data => {
-                const bounds = L.latLngBounds();
-                
-                data.forEach(site => {
-                    if (site.Lattitude && site.Longitude) {
-                        const marker = L.circleMarker(
-                            [site.Lattitude, site.Longitude],
-                            siteStyles[site.ProjectStatus.toLowerCase()]
-                        ).addTo(map);
-
-                        bounds.extend([site.Lattitude, site.Longitude]);
-
-                        const popupContent = `
+        .then(response => response.json())
+        .then(data => {
+            const bounds = L.latLngBounds();
+            
+            data.forEach(site => {
+                if (site.Lattitude && site.Longitude) {
+                    const marker = L.circleMarker(
+                    [site.Lattitude, site.Longitude],
+                    siteStyles[site.ProjectStatus.toLowerCase()]
+                    ).addTo(map);
+                    
+                    bounds.extend([site.Lattitude, site.Longitude]);
+                    
+                    const popupContent = `
                             <div style="font-family: 'Libre Franklin', sans-serif; font-weight: 400;">
                                 <h3 style="margin: 0 0 10px 0; font-weight: 700;">${site["Site\nName"] || "Unnamed Site"}</h3>
                                 <p style="margin: 5px 0;"><strong>Status:</strong> ${site.ProjectStatus}</p>
@@ -106,18 +109,18 @@
                                 ${site["Date\nClosed"] ? `<p style="margin: 5px 0;"><strong>Date Closed:</strong> ${site["Date\nClosed"]}</p>` : ''}
                             </div>
                         `;
-
-                        marker.bindPopup(popupContent);
-                        marker.on('mouseover', function(e) {
-                            this.openPopup();
-                        });
-                    }
-                });
-
-                // Fit map to remediation sites
-                map.fitBounds(bounds, { padding: [20, 20] });
+                    
+                    marker.bindPopup(popupContent);
+                    marker.on('mouseover', function(e) {
+                        this.openPopup();
+                    });
+                }
             });
-
+            
+            // Fit map to remediation sites
+            map.fitBounds(bounds, { padding: [20, 20] });
+        });
+        
         // Add legend
         const legend = L.control({ position: 'bottomright' });
         legend.onAdd = function(map) {
@@ -128,7 +131,7 @@
             div.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
             div.style.fontFamily = "'Libre Franklin', sans-serif";
             div.style.fontSize = '14px';
-
+            
             div.innerHTML = `
                 <h4 style="margin: 0 0 8px 0; font-weight: 700;">Site Status</h4>
                 <div style="margin-bottom: 5px;">
