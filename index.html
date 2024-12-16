@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Colorado Remediation Projects Map</title>
-
+    
+    <!-- Google Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=Libre+Franklin:ital,wght@0,100..900;1,100..900&family=Martel:wght@200;300;400;600;700;800;900&display=swap">
+    
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
     <!-- Custom CSS -->
@@ -16,36 +19,88 @@
 <body>
     <div class="container">
         <h1>Colorado Remediation Projects</h1>
-        <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.</p>
         <div id="map"></div>
         <div id="info-panel">
             <h2>Site Information</h2>
             <div id="site-info">Select a site to view details</div>
+            <div class="source-line">Source: Colorado Oil and Gas Conservation Commission</div>
         </div>
     </div>
 
     <script>
-        // Initialize the map
-        const map = L.map('map').setView([40.5, -104.5], 8);
+        // Initialize the map without a center/zoom (we'll set these after loading the data)
+        const map = L.map('map');
 
         // Add OpenStreetMap tiles
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        // Fetch and display data
+        // Style for county boundaries
+        const countyStyle = {
+            color: '#666',
+            weight: 1,
+            opacity: 0.8,
+            fillOpacity: 0,
+            interactive: false
+        };
+
+        // Custom marker styles for better accessibility
+        const siteStyles = {
+            active: {
+                radius: 8,
+                color: '#000',
+                weight: 2,
+                fillColor: '#2563eb',
+                fillOpacity: 0.9,
+                fillPattern: 'circle'
+            },
+            closed: {
+                radius: 8,
+                color: '#000',
+                weight: 2,
+                fillColor: '#ea580c',
+                fillOpacity: 0.9,
+                fillPattern: 'cross'
+            }
+        };
+
+        // Add counties first (they'll be on the bottom layer)
+        fetch('data/colorado-counties.json')
+            .then(response => response.json())
+            .then(counties => {
+                L.geoJSON(counties, {
+                    style: countyStyle
+                }).addTo(map);
+
+                // Add county labels
+                counties.features.forEach(county => {
+                    const center = L.geoJSON(county).getBounds().getCenter();
+                    L.marker(center, {
+                        icon: L.divIcon({
+                            className: 'county-label',
+                            html: `<div style="background-color: rgba(255,255,255,0.7); padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #666; font-weight: bold;">${county.properties.name}</div>`,
+                            iconSize: [100, 20],
+                            iconAnchor: [50, 10]
+                        })
+                    }).addTo(map);
+                });
+            });
+
+        // Then add remediation sites (they'll be on top)
         fetch('data/remediation_projects.json')
             .then(response => response.json())
             .then(data => {
+                const bounds = L.latLngBounds();
+                
                 data.forEach(site => {
                     if (site.Lattitude && site.Longitude) {
-                        const marker = L.marker([site.Lattitude, site.Longitude], {
-                            icon: L.divIcon({
-                                className: `marker-icon ${site.ProjectStatus.toLowerCase()}`,
-                                html: '•',
-                                iconSize: [20, 20]
-                            })
-                        }).addTo(map);
+                        const marker = L.circleMarker(
+                            [site.Lattitude, site.Longitude],
+                            siteStyles[site.ProjectStatus.toLowerCase()]
+                        ).addTo(map);
+
+                        bounds.extend([site.Lattitude, site.Longitude]);
 
                         marker.on('click', () => {
                             document.getElementById('site-info').innerHTML = `
@@ -59,8 +114,35 @@
                         });
                     }
                 });
-            })
-            .catch(error => console.error('Error loading data:', error));
+
+                // Fit map to remediation sites
+                map.fitBounds(bounds, { padding: [20, 20] });
+            });
+
+        // Add legend
+        const legend = L.control({ position: 'bottomright' });
+        legend.onAdd = function(map) {
+            const div = L.DomUtil.create('div', 'info legend');
+            div.style.backgroundColor = 'white';
+            div.style.padding = '10px';
+            div.style.borderRadius = '4px';
+            div.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+            div.style.fontFamily = "'IBM Plex Mono', monospace";
+
+            div.innerHTML = `
+                <h4 style="margin: 0 0 8px 0;">Site Status</h4>
+                <div style="margin-bottom: 5px;">
+                    <span style="display: inline-block; width: 16px; height: 16px; border-radius: 50%; background-color: #2563eb; border: 2px solid #000; margin-right: 8px;"></span>
+                    Active
+                </div>
+                <div>
+                    <span style="display: inline-block; width: 16px; height: 16px; border-radius: 50%; background-color: #ea580c; border: 2px solid #000; margin-right: 8px;"></span>
+                    Closed
+                </div>
+            `;
+            return div;
+        };
+        legend.addTo(map);
     </script>
 </body>
 </html>
