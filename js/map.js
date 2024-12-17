@@ -47,7 +47,7 @@ const map = L.map('map', {
     zoomControl: window.innerWidth > 768,
     touchZoom: true,
     dragging: true,
-    maxBounds: L.latLngBounds([36.993076, -109.045223], [41.003444, -102.041524]), // Set max bounds to Colorado state
+    maxBounds: L.latLngBounds([36.993076, -109.045223], [41.003444, -102.041524]),
     maxBoundsViscosity: 1.0
 });
 map.getContainer().classList.add('map-loading');
@@ -116,8 +116,26 @@ const updateMarkerSizes = () => {
 
 const debouncedUpdateMarkerSizes = _.debounce(updateMarkerSizes, 250);
 
+function sendHeight() {
+    const mapElement = document.getElementById('map');
+    const footerElement = document.querySelector('.footer');
+    const mapHeight = mapElement.offsetHeight;
+    const footerHeight = footerElement.offsetHeight;
+    const totalHeight = mapHeight + footerHeight;
+    
+    window.parent.postMessage({
+        type: 'resize',
+        height: totalHeight,
+        source: 'resize'
+    }, '*');
+}
+
+let resizeTimeout;
 window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
     debouncedUpdateMarkerSizes();
+    
+    // Handle zoom control
     if (map.zoomControl) {
         if (window.innerWidth <= 768) {
             map.removeControl(map.zoomControl);
@@ -125,6 +143,9 @@ window.addEventListener('resize', () => {
     } else if (window.innerWidth > 768) {
         map.addControl(new L.Control.Zoom({ position: 'topleft' }));
     }
+    
+    // Handle height update
+    resizeTimeout = setTimeout(sendHeight, 250);
 });
 
 const addSites = (data) => {
@@ -212,6 +233,19 @@ const loadData = async () => {
         map.getContainer().classList.remove('map-loading');
         debugLog('Map initialization complete');
         
+        // Only send height after map loads if it's significantly different
+        setTimeout(function() {
+            const mapElement = document.getElementById('map');
+            const footerElement = document.querySelector('.footer');
+            const totalHeight = mapElement.offsetHeight + footerElement.offsetHeight;
+            
+            // Only send if the height is significantly different
+            const currentHeight = window.innerHeight;
+            if (Math.abs(totalHeight - currentHeight) > currentHeight * 0.1) {
+                sendHeight();
+            }
+        }, 100);
+        
     } catch (error) {
         console.error('Error loading map data:', error);
         debugLog('Failed to load map data', error);
@@ -220,40 +254,3 @@ const loadData = async () => {
 };
 
 document.addEventListener('DOMContentLoaded', loadData);
-
-// Add this to the bottom of your map.js file
-document.addEventListener('DOMContentLoaded', function() {
-    function sendHeight() {
-        // Get the actual content height
-        const mapElement = document.getElementById('map');
-        const footerElement = document.querySelector('.footer');
-        const mapHeight = mapElement.offsetHeight;
-        const footerHeight = footerElement.offsetHeight;
-        const totalHeight = mapHeight + footerHeight;
-
-        console.log('Sending height:', totalHeight);
-        
-        window.parent.postMessage({
-            type: 'resize',
-            height: totalHeight
-        }, '*');
-    }
-
-    // Send height after a short delay to ensure all elements are rendered
-    setTimeout(sendHeight, 500);
-
-    // Send height after map loads
-    map.on('load', function() {
-        setTimeout(sendHeight, 100);
-    });
-    
-    // Send height after any zoom/pan ends
-    map.on('moveend', sendHeight);
-    
-    // Debounced resize handler
-    let resizeTimeout;
-    window.addEventListener('resize', function() {
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(sendHeight, 250);
-    });
-});
