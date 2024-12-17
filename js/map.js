@@ -118,7 +118,13 @@ const debouncedUpdateMarkerSizes = _.debounce(updateMarkerSizes, 250);
 
 window.addEventListener('resize', () => {
     debouncedUpdateMarkerSizes();
-    map.setZoomControl(window.innerWidth > 768);
+    if (map.zoomControl) {
+        if (window.innerWidth <= 768) {
+            map.removeControl(map.zoomControl);
+        }
+    } else if (window.innerWidth > 768) {
+        map.addControl(new L.Control.Zoom({ position: 'topleft' }));
+    }
 });
 
 const addSites = (data) => {
