@@ -40,9 +40,9 @@ h1 {
     position: relative;
     width: 100%;
     height: 0;
-    padding-bottom: 56.25%;
+    padding-bottom: 85%;
     border-radius: var(--border-radius);
-    margin-bottom: var(--spacing-base);
+    margin-bottom: calc(var(--spacing-base) * 2);
 }
 
 #map .leaflet-container {
@@ -108,6 +108,7 @@ h1 {
     font-family: var(--font-primary);
     font-size: 14px;
     transition: all 0.3s ease;
+    margin-bottom: 40px;
 }
 
 .legend h4 {
@@ -173,6 +174,7 @@ h1 {
         max-width: 130px;
         font-size: 11px;
         padding: 10px;
+        margin-bottom: 50px;
         right: 10px !important;
         bottom: 10px !important;
     }
@@ -203,6 +205,13 @@ h1 {
     .leaflet-popup-content {
         margin: 10px;
         max-width: 200px;
+    }
+}
+
+@media (min-width: 769px) {
+    .leaflet-control-container .leaflet-bottom.leaflet-right {
+        bottom: 20px;
+        right: 20px;
     }
 }
 
