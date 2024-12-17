@@ -182,7 +182,7 @@ h1 {
 /* Mobile Optimizations */
 @media (max-width: 768px) {
     body {
-        padding: calc(var(--spacing-base) / 2);
+        padding: calc(var(--spacing-base) * 1.5);
     }
 
     #map {
