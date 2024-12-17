@@ -2,86 +2,85 @@ const debugLog = (message, data = null) => {
     console.log(`[Map Debug] ${message}`, data || '');
 };
 
-const countyStyle = feature => ({
-    color: '#666',
-    weight: feature.properties.name === 'Weld' ? 3 : 2,
-    opacity: 1,
-    fillOpacity: feature.properties.name === 'Weld' ? 0 : 0.25,
-    fillColor: '#000',
-    interactive: false
+// Initialize map with default view of Colorado
+const map = L.map('map', {
+    center: [39.5501, -105.7821],
+    zoom: 7
 });
+map.getContainer().classList.add('map-loading');
 
-const siteStyles = {
-    active: {
-        radius: 5,
-        color: '#666',
-        weight: 2,
-        fillColor: '#2563eb',
-        fillOpacity: 0.9
-    },
-    closed: {
-        radius: 5,
-        color: '#666',
-        weight: 2,
-        fillColor: '#fff',
-        fillOpacity: 0.7
-    }
-};
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
+    maxZoom: 20,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains: 'abcd'
+}).addTo(map);
 
 const addCountyLabels = (counties) => {
     debugLog('Adding county labels');
     
     counties.features.forEach(county => {
-        let center = turf.centerOfMass(county).geometry.coordinates;
-        if (county.properties.name === 'Weld') {
-            center = [center[0] + 0.1, center[1] + 0.05];
-        }
-
-        const div = document.createElement('div');
-        div.textContent = county.properties.name;
-        div.style.display = 'block';
-        
-        const label = new L.Marker([center[1], center[0]], {
-            icon: new L.DivIcon({
-                className: `county-label ${county.properties.name === 'Weld' ? 'weld-county' : ''}`,
-                html: div,
-                iconSize: [120, 20],
-                iconAnchor: [60, 10]
-            })
-        });
-
-        label.addTo(map);
-
-        const checkVisibility = () => {
-            const countyGeom = L.geoJSON(county);
-            const bounds = countyGeom.getBounds();
-            const labelPos = L.latLng(center[1], center[0]);
-            const isInBounds = bounds.contains(labelPos);
-            const pixelBounds = countyGeom.getBounds();
-            const width = Math.abs(pixelBounds.getEast() - pixelBounds.getWest());
-            const height = Math.abs(pixelBounds.getNorth() - pixelBounds.getSouth());
+        try {
+            let center = turf.centerOfMass(county);
+            if (!center || !center.geometry) {
+                console.warn(`Invalid geometry for county: ${county.properties.name}`);
+                return;
+            }
             
-            div.style.display = (!isInBounds || width < 100 || height < 50) ? 'none' : 'block';
-        };
+            let coordinates = center.geometry.coordinates;
+            if (county.properties.name === 'Weld') {
+                coordinates = [coordinates[0] + 0.1, coordinates[1] + 0.05];
+            }
 
-        map.on('zoomend', checkVisibility);
-        checkVisibility();
+            const div = document.createElement('div');
+            div.textContent = county.properties.name;
+            div.style.display = 'block';
+            
+            const label = new L.Marker([coordinates[1], coordinates[0]], {
+                icon: new L.DivIcon({
+                    className: `county-label ${county.properties.name === 'Weld' ? 'weld-county' : ''}`,
+                    html: div,
+                    iconSize: [120, 20],
+                    iconAnchor: [60, 10]
+                })
+            });
+
+            label.addTo(map);
+
+            const checkVisibility = () => {
+                const zoom = map.getZoom();
+                const isVisible = zoom > 7;
+                div.style.display = isVisible ? 'block' : 'none';
+            };
+
+            map.on('zoomend', checkVisibility);
+            checkVisibility();
+        } catch (error) {
+            console.error(`Error adding label for county: ${county.properties.name}`, error);
+        }
     });
 };
 
 const addSites = (data) => {
-    const bounds = L.latLngBounds();
-    let hasValidBounds = false;
+    const validSites = data.filter(site => 
+        site.Lattitude && site.Longitude && 
+        !isNaN(site.Lattitude) && !isNaN(site.Longitude)
+    );
     
-    data.forEach(site => {
-        if (site.Lattitude && site.Longitude) {
+    if (validSites.length === 0) {
+        console.warn('No valid sites found');
+        return;
+    }
+    
+    const bounds = L.latLngBounds(
+        validSites.map(site => [site.Lattitude, site.Longitude])
+    );
+    
+    validSites.forEach(site => {
+        try {
             const marker = L.circleMarker(
                 [site.Lattitude, site.Longitude],
                 siteStyles[site.ProjectStatus.toLowerCase()]
             ).addTo(map);
-            
-            bounds.extend([site.Lattitude, site.Longitude]);
-            hasValidBounds = true;
             
             marker.bindPopup(`
                 <div class="popup-content">
@@ -94,43 +93,16 @@ const addSites = (data) => {
                 </div>
             `);
             
-            marker.on('mouseover', function(e) {
+            marker.on('mouseover', function() {
                 this.openPopup();
             });
+        } catch (error) {
+            console.error(`Error adding site marker: ${site["Site\nName"]}`, error);
         }
     });
     
-    if (hasValidBounds) {
-        map.fitBounds(bounds, { padding: [20, 20] });
-    }
+    map.fitBounds(bounds, { padding: [20, 20] });
 };
-
-const map = L.map('map');
-map.getContainer().classList.add('map-loading');
-
-L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
-    maxZoom: 20,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    subdomains: 'abcd'
-}).addTo(map);
-
-const legend = L.control({ position: 'bottomright' });
-legend.onAdd = function(map) {
-    const div = L.DomUtil.create('div', 'legend');
-    div.innerHTML = `
-        <h4>Site Status</h4>
-        <div class="legend-item">
-            <span class="legend-marker active"></span>
-            Active
-        </div>
-        <div class="legend-item">
-            <span class="legend-marker closed"></span>
-            Closed
-        </div>
-    `;
-    return div;
-};
-legend.addTo(map);
 
 const loadData = async () => {
     try {
@@ -141,9 +113,10 @@ const loadData = async () => {
         ]);
         debugLog('Data fetched successfully', { countiesCount: counties.features.length, sitesCount: sites.length });
         
-        L.geoJSON(counties, { style: countyStyle }).addTo(map);
+        const countiesLayer = L.geoJSON(counties, { style: countyStyle }).addTo(map);
         addCountyLabels(counties);
         addSites(sites);
+        
         map.getContainer().classList.remove('map-loading');
         debugLog('Map initialization complete');
         
