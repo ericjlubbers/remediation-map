@@ -1,6 +1,6 @@
 :root {
     --font-primary: 'Libre Franklin', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    --font-secondary:'IBM Plex Sans Condensed', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-secondary: 'IBM Plex Sans Condensed', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     --font-mono: 'IBM Plex Mono', monospace;
     --color-text-primary: #333;
     --color-text-secondary: #666;
@@ -9,67 +9,73 @@
     --color-marker-closed: #fff;
     --spacing-base: 20px;
     --border-radius: 8px;
-}
-
-body {
+  }
+  
+  body {
     margin: 0;
     padding: var(--spacing-base);
     font-family: var(--font-primary);
-    max-height: 600px;
-    overflow: hidden;
-}
-
-.container {
+  }
+  
+  .container {
     max-width: 800px;
     margin: 0 auto;
-    max-height: 600px;
-    overflow: hidden;
-}
-
-h1 {
+    width: 100%;
+  }
+  
+  h1 {
     font-weight: 700;
     color: var(--color-text-primary);
     margin-bottom: var(--spacing-base);
-}
-
-.chatter {
+  }
+  
+  .chatter {
     margin-bottom: var(--spacing-base);
     line-height: 1.5;
-}
-
-#map {
-    height: calc(600px - 160px);
-    max-height: 600px;
+  }
+  
+  #map {
+    position: relative;
     width: 100%;
+    padding-bottom: 75%;
+    height: 0;
     border-radius: var(--border-radius);
     margin-bottom: var(--spacing-base);
-}
-
-.map-loading {
+  }
+  
+  #map .leaflet-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+  
+  .map-loading {
     opacity: 0.5;
     transition: opacity 0.3s ease;
-}
-
-.footer {
+  }
+  
+  .footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-}
-
-.source {
+  }
+  
+  .source {
     color: var(--color-text-secondary);
     font-family: var(--font-secondary);
     text-transform: uppercase;
     font-size: 0.9em;
-}
-
-.logo img {
+  }
+  
+  .logo img {
     height: 30px;
     width: auto;
     max-width: 200px;
-}
-
-.county-label {
+  }
+  
+  .county-label {
     font-family: var(--font-primary);
     font-weight: 600;
     font-size: 14px;
@@ -77,76 +83,76 @@ h1 {
     text-transform: uppercase;
     text-align: center;
     text-shadow:
-        -1px -1px 0 #fff,
-        1px -1px 0 #fff,
-        -1px 1px 0 #fff,
-        1px 1px 0 #fff,
-        0 2px 4px rgba(0,0,0,0.2);
-}
-
-.county-label.weld-county {
+      -1px -1px 0 #fff,
+      1px -1px 0 #fff,
+      -1px 1px 0 #fff,
+      1px 1px 0 #fff,
+      0 2px 4px rgba(0,0,0,0.2);
+  }
+  
+  .county-label.weld-county {
     font-size: 18px;
     font-weight: 700;
     color: #666;
     text-shadow:
-        -1px -1px 0 #fff,
-        1px -1px 0 #fff,
-        -1px 1px 0 #fff,
-        1px 1px 0 #fff,
-        0 2px 4px rgba(0,0,0,0.2);
-}
-
-.legend {
+      -1px -1px 0 #fff,
+      1px -1px 0 #fff,
+      -1px 1px 0 #fff,
+      1px 1px 0 #fff,
+      0 2px 4px rgba(0,0,0,0.2);
+  }
+  
+  .legend {
     background-color: rgba(255, 255, 255, 0.9);
     padding: var(--spacing-base);
     border-radius: var(--border-radius);
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     font-family: var(--font-primary);
     font-size: 14px;
-}
-
-.legend h4 {
+  }
+  
+  .legend h4 {
     margin: 0 0 8px 0;
     font-weight: 700;
-}
-
-.legend-item {
+  }
+  
+  .legend-item {
     margin-bottom: 5px;
     display: flex;
     align-items: center;
-}
-
-.legend-marker {
+  }
+  
+  .legend-marker {
     display: inline-block;
     width: 16px;
     height: 16px;
     border-radius: 50%;
     border: 2px solid #666;
     margin-right: 8px;
-}
-
-.legend-marker.active {
+  }
+  
+  .legend-marker.active {
     background-color: var(--color-marker-active);
-}
-
-.legend-marker.closed {
+  }
+  
+  .legend-marker.closed {
     background-color: var(--color-marker-closed);
-}
-
-.popup-content {
+  }
+  
+  .popup-content {
     font-family: var(--font-primary);
     font-weight: 400;
-}
-
-.popup-content h3 {
+  }
+  
+  .popup-content h3 {
     margin: 0 0 10px 0;
     font-weight: 700;
-}
-
-.popup-content p {
+  }
+  
+  .popup-content p {
     margin: 5px 0;
-}
-
-.leaflet-attribution-flag img {
+  }
+  
+  .leaflet-attribution-flag img {
     display: none;
-}
+  }

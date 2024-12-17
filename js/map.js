@@ -28,11 +28,9 @@ const siteStyles = {
     }
 };
 
-
-// Initialize map with default view of Colorado
 const map = L.map('map', {
-    center: [40.47630108621871, -104.12287435648366],
-    zoom: 5
+    center: [39.5501, -105.7821],
+    zoom: 7
 });
 map.getContainer().classList.add('map-loading');
 
@@ -128,8 +126,29 @@ const addSites = (data) => {
         }
     });
     
-    map.fitBounds(bounds, { padding: [20, 20] });
+    map.fitBounds(bounds, {
+        padding: [50, 50],
+        maxZoom: 10
+    });
 };
+
+const legend = L.control({ position: 'bottomright' });
+legend.onAdd = function(map) {
+    const div = L.DomUtil.create('div', 'legend');
+    div.innerHTML = `
+        <h4>Site Status</h4>
+        <div class="legend-item">
+            <span class="legend-marker active"></span>
+            Active
+        </div>
+        <div class="legend-item">
+            <span class="legend-marker closed"></span>
+            Closed
+        </div>
+    `;
+    return div;
+};
+legend.addTo(map);
 
 const loadData = async () => {
     try {
