@@ -214,3 +214,30 @@ const loadData = async () => {
 };
 
 document.addEventListener('DOMContentLoaded', loadData);
+
+// Add this script to the bottom of your map.js file
+document.addEventListener('DOMContentLoaded', function() {
+    function sendHeight() {
+        const height = document.documentElement.offsetHeight;
+        window.parent.postMessage({
+            type: 'resize',
+            height: height
+        }, '*');
+    }
+
+    // Send initial height
+    setTimeout(sendHeight, 1000);
+
+    // Send height after map loads
+    map.on('load', sendHeight);
+    
+    // Send height after any zoom/pan
+    map.on('moveend', sendHeight);
+    
+    // Send height on window resize
+    let resizeTimeout;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(sendHeight, 250);
+    });
+});
