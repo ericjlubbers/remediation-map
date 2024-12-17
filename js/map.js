@@ -40,20 +40,28 @@ const addCountyLabels = (counties) => {
                 iconSize: [120, 20],
                 iconAnchor: [60, 10]
             })
-        }).addTo(map);
-        
-        map.on('zoomend', () => {
-            const countyGeom = L.geoJSON(county);
-            const bounds = countyGeom.getBounds();
-            const labelPos = L.latLng(center[1], center[0]);
-            
-            const isInBounds = bounds.contains(labelPos);
-            const pixelBounds = countyGeom.getBounds();
-            const width = Math.abs(pixelBounds.getEast() - pixelBounds.getWest());
-            const height = Math.abs(pixelBounds.getNorth() - pixelBounds.getSouth());
-            
-            label.getElement().style.display = (!isInBounds || width < 100 || height < 50) ? 'none' : 'block';
         });
+        
+        label.addTo(map);
+        
+        // Wait for next tick to ensure element exists
+        setTimeout(() => {
+            const labelElement = label.getElement();
+            if (labelElement) {
+                map.on('zoomend', () => {
+                    const countyGeom = L.geoJSON(county);
+                    const bounds = countyGeom.getBounds();
+                    const labelPos = L.latLng(center[1], center[0]);
+                    
+                    const isInBounds = bounds.contains(labelPos);
+                    const pixelBounds = countyGeom.getBounds();
+                    const width = Math.abs(pixelBounds.getEast() - pixelBounds.getWest());
+                    const height = Math.abs(pixelBounds.getNorth() - pixelBounds.getSouth());
+                    
+                    labelElement.style.display = (!isInBounds || width < 100 || height < 50) ? 'none' : 'block';
+                });
+            }
+        }, 0);
     });
 };
 
