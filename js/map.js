@@ -46,7 +46,9 @@ const map = L.map('map', {
     zoom: 7,
     zoomControl: window.innerWidth > 768,
     touchZoom: true,
-    dragging: true
+    dragging: true,
+    maxBounds: L.latLngBounds([36.993076, -109.045223], [41.003444, -102.041524]), // Set max bounds to Colorado state
+    maxBoundsViscosity: 1.0
 });
 map.getContainer().classList.add('map-loading');
 
