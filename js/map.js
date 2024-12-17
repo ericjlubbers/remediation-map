@@ -1,4 +1,7 @@
-// Configuration variables first
+const debugLog = (message, data = null) => {
+    console.log(`[Map Debug] ${message}`, data || '');
+};
+
 const countyStyle = feature => ({
     color: '#666',
     weight: feature.properties.name === 'Weld' ? 3 : 2,
@@ -26,29 +29,36 @@ const siteStyles = {
 };
 
 const addCountyLabels = (counties) => {
+    debugLog('Adding county labels', counties);
     counties.features.forEach(county => {
-        const bounds = L.geoJSON(county).getBounds();
-        let center = turf.centerOfMass(county).geometry.coordinates;
-        if (county.properties.name === 'Weld') {
-            center = [center[0] + 0.1, center[1] + 0.05];
-        }
-        
-        const label = L.marker([center[1], center[0]], {
-            icon: L.divIcon({
-                className: `county-label ${county.properties.name === 'Weld' ? 'weld-county' : ''}`,
-                html: `<div>${county.properties.name}</div>`,
-                iconSize: [120, 20],
-                iconAnchor: [60, 10]
-            })
-        });
-        
-        label.addTo(map);
-        
-        // Wait for next tick to ensure element exists
-        setTimeout(() => {
-            const labelElement = label.getElement();
-            if (labelElement) {
-                map.on('zoomend', () => {
+        try {
+            debugLog(`Processing county: ${county.properties.name}`);
+            const bounds = L.geoJSON(county).getBounds();
+            let center = turf.centerOfMass(county).geometry.coordinates;
+            if (county.properties.name === 'Weld') {
+                center = [center[0] + 0.1, center[1] + 0.05];
+            }
+            
+            const label = L.marker([center[1], center[0]], {
+                icon: L.divIcon({
+                    className: `county-label ${county.properties.name === 'Weld' ? 'weld-county' : ''}`,
+                    html: `<div>${county.properties.name}</div>`,
+                    iconSize: [120, 20],
+                    iconAnchor: [60, 10]
+                })
+            });
+            
+            label.addTo(map);
+            
+            const labelDiv = label.getElement();
+            debugLog(`Label element for ${county.properties.name}:`, labelDiv);
+            
+            if (!labelDiv) {
+                throw new Error(`Failed to get DOM element for ${county.properties.name} label`);
+            }
+            
+            const updateLabelVisibility = () => {
+                try {
                     const countyGeom = L.geoJSON(county);
                     const bounds = countyGeom.getBounds();
                     const labelPos = L.latLng(center[1], center[0]);
@@ -58,10 +68,18 @@ const addCountyLabels = (counties) => {
                     const width = Math.abs(pixelBounds.getEast() - pixelBounds.getWest());
                     const height = Math.abs(pixelBounds.getNorth() - pixelBounds.getSouth());
                     
-                    labelElement.style.display = (!isInBounds || width < 100 || height < 50) ? 'none' : 'block';
-                });
-            }
-        }, 0);
+                    labelDiv.style.display = (!isInBounds || width < 100 || height < 50) ? 'none' : 'block';
+                    debugLog(`Updated visibility for ${county.properties.name}`, {isInBounds, width, height});
+                } catch (err) {
+                    console.error(`Error updating label visibility for ${county.properties.name}:`, err);
+                }
+            };
+            
+            map.on('zoomend', updateLabelVisibility);
+            
+        } catch (err) {
+            console.error(`Error processing county ${county.properties.name}:`, err);
+        }
     });
 };
 
@@ -97,7 +115,6 @@ const addSites = (data) => {
     map.fitBounds(bounds, { padding: [20, 20] });
 };
 
-// Initialize map
 const map = L.map('map');
 map.getContainer().classList.add('map-loading');
 
@@ -107,7 +124,6 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png
     subdomains: 'abcd'
 }).addTo(map);
 
-// Add legend
 const legend = L.control({ position: 'bottomright' });
 legend.onAdd = function(map) {
     const div = L.DomUtil.create('div', 'legend');
@@ -126,21 +142,24 @@ legend.onAdd = function(map) {
 };
 legend.addTo(map);
 
-// Load data
 const loadData = async () => {
     try {
+        debugLog('Starting data load');
         const [counties, sites] = await Promise.all([
             fetch('data/colorado-counties.json').then(r => r.json()),
             fetch('data/remediation_projects.json').then(r => r.json())
         ]);
+        debugLog('Data fetched successfully', { countiesCount: counties.features.length, sitesCount: sites.length });
         
         L.geoJSON(counties, { style: countyStyle }).addTo(map);
         addCountyLabels(counties);
         addSites(sites);
         map.getContainer().classList.remove('map-loading');
+        debugLog('Map initialization complete');
         
     } catch (error) {
         console.error('Error loading map data:', error);
+        debugLog('Failed to load map data', error);
         map.getContainer().classList.remove('map-loading');
     }
 };
