@@ -29,57 +29,43 @@ const siteStyles = {
 };
 
 const addCountyLabels = (counties) => {
-    debugLog('Adding county labels', counties);
+    debugLog('Adding county labels');
+    
     counties.features.forEach(county => {
-        try {
-            debugLog(`Processing county: ${county.properties.name}`);
-            const bounds = L.geoJSON(county).getBounds();
-            let center = turf.centerOfMass(county).geometry.coordinates;
-            if (county.properties.name === 'Weld') {
-                center = [center[0] + 0.1, center[1] + 0.05];
-            }
-            
-            const label = L.marker([center[1], center[0]], {
-                icon: L.divIcon({
-                    className: `county-label ${county.properties.name === 'Weld' ? 'weld-county' : ''}`,
-                    html: `<div>${county.properties.name}</div>`,
-                    iconSize: [120, 20],
-                    iconAnchor: [60, 10]
-                })
-            });
-            
-            label.addTo(map);
-            
-            const labelDiv = label.getElement();
-            debugLog(`Label element for ${county.properties.name}:`, labelDiv);
-            
-            if (!labelDiv) {
-                throw new Error(`Failed to get DOM element for ${county.properties.name} label`);
-            }
-            
-            const updateLabelVisibility = () => {
-                try {
-                    const countyGeom = L.geoJSON(county);
-                    const bounds = countyGeom.getBounds();
-                    const labelPos = L.latLng(center[1], center[0]);
-                    
-                    const isInBounds = bounds.contains(labelPos);
-                    const pixelBounds = countyGeom.getBounds();
-                    const width = Math.abs(pixelBounds.getEast() - pixelBounds.getWest());
-                    const height = Math.abs(pixelBounds.getNorth() - pixelBounds.getSouth());
-                    
-                    labelDiv.style.display = (!isInBounds || width < 100 || height < 50) ? 'none' : 'block';
-                    debugLog(`Updated visibility for ${county.properties.name}`, {isInBounds, width, height});
-                } catch (err) {
-                    console.error(`Error updating label visibility for ${county.properties.name}:`, err);
-                }
-            };
-            
-            map.on('zoomend', updateLabelVisibility);
-            
-        } catch (err) {
-            console.error(`Error processing county ${county.properties.name}:`, err);
+        let center = turf.centerOfMass(county).geometry.coordinates;
+        if (county.properties.name === 'Weld') {
+            center = [center[0] + 0.1, center[1] + 0.05];
         }
+
+        const div = document.createElement('div');
+        div.textContent = county.properties.name;
+        div.style.display = 'block';
+        
+        const label = new L.Marker([center[1], center[0]], {
+            icon: new L.DivIcon({
+                className: `county-label ${county.properties.name === 'Weld' ? 'weld-county' : ''}`,
+                html: div,
+                iconSize: [120, 20],
+                iconAnchor: [60, 10]
+            })
+        });
+
+        label.addTo(map);
+
+        const checkVisibility = () => {
+            const countyGeom = L.geoJSON(county);
+            const bounds = countyGeom.getBounds();
+            const labelPos = L.latLng(center[1], center[0]);
+            const isInBounds = bounds.contains(labelPos);
+            const pixelBounds = countyGeom.getBounds();
+            const width = Math.abs(pixelBounds.getEast() - pixelBounds.getWest());
+            const height = Math.abs(pixelBounds.getNorth() - pixelBounds.getSouth());
+            
+            div.style.display = (!isInBounds || width < 100 || height < 50) ? 'none' : 'block';
+        };
+
+        map.on('zoomend', checkVisibility);
+        checkVisibility();
     });
 };
 
