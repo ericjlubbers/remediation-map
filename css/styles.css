@@ -15,14 +15,14 @@ body {
     margin: 0;
     padding: var(--spacing-base);
     font-family: var(--font-primary);
-    max-height: 800px;
+    max-height: 600px;
     overflow: hidden;
 }
 
 .container {
     max-width: 800px;
     margin: 0 auto;
-    max-height: 800px;
+    max-height: 600px;
     overflow: hidden;
 }
 
@@ -38,7 +38,7 @@ h1 {
 }
 
 #map {
-    height: calc(800px - 160px);
+    height: calc(600px - 160px);
     max-height: 600px;
     width: 100%;
     border-radius: var(--border-radius);
