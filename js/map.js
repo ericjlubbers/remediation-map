@@ -167,7 +167,7 @@ const addSites = (data) => {
     });
     
     map.fitBounds(bounds, {
-        padding: [30, 30],
+        padding: [40, 40],
         maxZoom: 10
     });
 };
