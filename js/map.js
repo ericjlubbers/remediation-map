@@ -2,6 +2,19 @@ const debugLog = (message, data = null) => {
     console.log(`[Map Debug] ${message}`, data || '');
 };
 
+const getMarkerRadius = () => {
+    const width = window.innerWidth;
+    if (width <= 480) return 2.5;
+    if (width <= 768) return 3.5;
+    return 5;
+};
+
+const getMarkerWeight = () => {
+    const width = window.innerWidth;
+    if (width <= 768) return 1;
+    return 2;
+};
+
 const countyStyle = feature => ({
     color: '#666',
     weight: feature.properties.name === 'Weld' ? 3 : 2,
@@ -13,16 +26,16 @@ const countyStyle = feature => ({
 
 const siteStyles = {
     active: {
-        radius: 5,
+        radius: getMarkerRadius(),
         color: '#666',
-        weight: 2,
+        weight: getMarkerWeight(),
         fillColor: '#2563eb',
         fillOpacity: 0.9
     },
     closed: {
-        radius: 5,
+        radius: getMarkerRadius(),
         color: '#666',
-        weight: 2,
+        weight: getMarkerWeight(),
         fillColor: '#fff',
         fillOpacity: 0.7
     }
@@ -30,7 +43,10 @@ const siteStyles = {
 
 const map = L.map('map', {
     center: [39.5501, -105.7821],
-    zoom: 7
+    zoom: 7,
+    zoomControl: window.innerWidth > 768,
+    touchZoom: true,
+    dragging: true
 });
 map.getContainer().classList.add('map-loading');
 
@@ -85,6 +101,24 @@ const addCountyLabels = (counties) => {
     });
 };
 
+const updateMarkerSizes = () => {
+    map.eachLayer((layer) => {
+        if (layer instanceof L.CircleMarker) {
+            const radius = getMarkerRadius();
+            const weight = getMarkerWeight();
+            layer.setRadius(radius);
+            layer.setStyle({ weight: weight });
+        }
+    });
+};
+
+const debouncedUpdateMarkerSizes = _.debounce(updateMarkerSizes, 250);
+
+window.addEventListener('resize', () => {
+    debouncedUpdateMarkerSizes();
+    map.setZoomControl(window.innerWidth > 768);
+});
+
 const addSites = (data) => {
     const validSites = data.filter(site => 
         site.Lattitude && site.Longitude && 
@@ -102,9 +136,13 @@ const addSites = (data) => {
     
     validSites.forEach(site => {
         try {
+            const style = { ...siteStyles[site.ProjectStatus.toLowerCase()] };
+            style.radius = getMarkerRadius();
+            style.weight = getMarkerWeight();
+            
             const marker = L.circleMarker(
                 [site.Lattitude, site.Longitude],
-                siteStyles[site.ProjectStatus.toLowerCase()]
+                style
             ).addTo(map);
             
             marker.bindPopup(`
