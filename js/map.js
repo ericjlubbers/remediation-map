@@ -2,6 +2,33 @@ const debugLog = (message, data = null) => {
     console.log(`[Map Debug] ${message}`, data || '');
 };
 
+const countyStyle = feature => ({
+    color: '#666',
+    weight: feature.properties.name === 'Weld' ? 3 : 2,
+    opacity: 1,
+    fillOpacity: feature.properties.name === 'Weld' ? 0 : 0.25,
+    fillColor: '#000',
+    interactive: false
+});
+
+const siteStyles = {
+    active: {
+        radius: 5,
+        color: '#666',
+        weight: 2,
+        fillColor: '#2563eb',
+        fillOpacity: 0.9
+    },
+    closed: {
+        radius: 5,
+        color: '#666',
+        weight: 2,
+        fillColor: '#fff',
+        fillOpacity: 0.7
+    }
+};
+
+
 // Initialize map with default view of Colorado
 const map = L.map('map', {
     center: [39.5501, -105.7821],
