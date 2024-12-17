@@ -71,6 +71,7 @@ const addCountyLabels = (counties) => {
 
 const addSites = (data) => {
     const bounds = L.latLngBounds();
+    let hasValidBounds = false;
     
     data.forEach(site => {
         if (site.Lattitude && site.Longitude) {
@@ -80,6 +81,7 @@ const addSites = (data) => {
             ).addTo(map);
             
             bounds.extend([site.Lattitude, site.Longitude]);
+            hasValidBounds = true;
             
             marker.bindPopup(`
                 <div class="popup-content">
@@ -98,7 +100,9 @@ const addSites = (data) => {
         }
     });
     
-    map.fitBounds(bounds, { padding: [20, 20] });
+    if (hasValidBounds) {
+        map.fitBounds(bounds, { padding: [20, 20] });
+    }
 };
 
 const map = L.map('map');
