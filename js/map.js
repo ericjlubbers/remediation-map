@@ -10,7 +10,7 @@ const countyStyle = feature => ({
     color: '#666',
     weight: feature.properties.name === 'Weld' ? 3 : 2,
     opacity: 1,
-    fillOpacity: feature.properties.name === 'Weld' ? 0 : 0.25,
+    fillOpacity: feature.properties.name === 'Weld' ? 0 : 0.15,
     fillColor: '#000',
     interactive: false
 });
@@ -43,7 +43,7 @@ fetch('data/colorado-counties.json')
         const bounds = L.geoJSON(county).getBounds();
         let center = turf.centerOfMass(county).geometry.coordinates;
         if (county.properties.name === 'Weld') {
-            center = [center[0] + 0.1, center[1] + 0.1]; // Shift NE
+            center = [center[0] + 0.1, center[1] + 0.05]; // Shift NE
         }
         
         const label = L.marker([center[1], center[0]], {
