@@ -38,11 +38,16 @@ h1 {
 }
 
 #map {
-    height: calc(800px - 200px); /* Accounting for header and footer */
+    height: calc(800px - 160px);
     max-height: 600px;
     width: 100%;
     border-radius: var(--border-radius);
     margin-bottom: var(--spacing-base);
+}
+
+.map-loading {
+    opacity: 0.5;
+    transition: opacity 0.3s ease;
 }
 
 .footer {
@@ -71,7 +76,7 @@ h1 {
     color: #8e9da9;
     text-transform: uppercase;
     text-align: center;
-    text-shadow: 
+    text-shadow:
         -1px -1px 0 #fff,
         1px -1px 0 #fff,
         -1px 1px 0 #fff,
@@ -83,12 +88,12 @@ h1 {
     font-size: 18px;
     font-weight: 700;
     color: #666;
-    text-shadow: 
-    -1px -1px 0 #fff,
-    1px -1px 0 #fff,
-    -1px 1px 0 #fff,
-    1px 1px 0 #fff,
-    0 2px 4px rgba(0,0,0,0.2);
+    text-shadow:
+        -1px -1px 0 #fff,
+        1px -1px 0 #fff,
+        -1px 1px 0 #fff,
+        1px 1px 0 #fff,
+        0 2px 4px rgba(0,0,0,0.2);
 }
 
 .legend {
@@ -142,6 +147,6 @@ h1 {
     margin: 5px 0;
 }
 
-.leaflet-attribution-flag {
+.leaflet-attribution-flag img {
     display: none;
 }
