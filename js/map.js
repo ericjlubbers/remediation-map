@@ -32,7 +32,7 @@ const siteStyles = {
 // Initialize map with default view of Colorado
 const map = L.map('map', {
     center: [39.5501, -105.7821],
-    zoom: 7
+    zoom: 6
 });
 map.getContainer().classList.add('map-loading');
 
