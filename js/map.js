@@ -33,49 +33,59 @@ const siteStyles = {
 };
 
 fetch('data/colorado-counties.json')
-    .then(response => response.json())
-    .then(counties => {
-        L.geoJSON(counties, {
-            style: countyStyle
+.then(response => response.json())
+.then(counties => {
+    L.geoJSON(counties, {
+        style: countyStyle
+    }).addTo(map);
+    
+    counties.features.forEach(county => {
+        const bounds = L.geoJSON(county).getBounds();
+        let center = turf.centerOfMass(county).geometry.coordinates;
+        if (county.properties.name === 'Weld') {
+            center = [center[0] + 0.1, center[1] + 0.1]; // Shift NE
+        }
+        
+        const label = L.marker([center[1], center[0]], {
+            icon: L.divIcon({
+                className: `county-label ${county.properties.name === 'Weld' ? 'weld-county' : ''}`,
+                html: `<div>${county.properties.name}</div>`,
+                iconSize: [120, 20],
+                iconAnchor: [60, 10]
+            })
         }).addTo(map);
         
-        counties.features.forEach(county => {
-            const bounds = L.geoJSON(county).getBounds();
-            const center = turf.centerOfMass(county).geometry.coordinates;
+        map.on('zoomend', () => {
+            const countyGeom = L.geoJSON(county);
+            const bounds = countyGeom.getBounds();
+            const labelPos = L.latLng(center[1], center[0]);
             
-            const label = L.marker([center[1], center[0]], {
-                icon: L.divIcon({
-                    className: `county-label ${county.properties.name === 'Weld' ? 'weld-county' : ''}`,
-                    html: `<div>${county.properties.name}</div>`,
-                    iconSize: [120, 20],
-                    iconAnchor: [60, 10]
-                })
-            }).addTo(map);
+            // Hide if label position is outside county bounds or county is too small
+            const isInBounds = bounds.contains(labelPos);
+            const pixelBounds = countyGeom.getBounds();
+            const width = Math.abs(pixelBounds.getEast() - pixelBounds.getWest());
+            const height = Math.abs(pixelBounds.getNorth() - pixelBounds.getSouth());
             
-            map.on('zoomend', () => {
-                const countyPixelBounds = bounds.toBBoxString().split(',').map(Number);
-                const width = Math.abs(countyPixelBounds[2] - countyPixelBounds[0]);
-                const height = Math.abs(countyPixelBounds[3] - countyPixelBounds[1]);
-                label.getElement().style.display = width < 100 || height < 50 ? 'none' : 'block';
-            });
+            label.getElement().style.display = (!isInBounds || width < 100 || height < 50) ? 'none' : 'block';
         });
     });
+});
 
 fetch('data/remediation_projects.json')
-    .then(response => response.json())
-    .then(data => {
-        const bounds = L.latLngBounds();
-        
-        data.forEach(site => {
-            if (site.Lattitude && site.Longitude) {
-                const marker = L.circleMarker(
-                    [site.Lattitude, site.Longitude],
-                    siteStyles[site.ProjectStatus.toLowerCase()]
-                ).addTo(map);
-                
-                bounds.extend([site.Lattitude, site.Longitude]);
-                
-                marker.bindPopup(`
+.then(response => response.json())
+.then(data => {
+    const bounds = L.latLngBounds();
+    
+    data.forEach(site => {
+        if (site.Lattitude && site.Longitude) {
+            const marker = L.circleMarker(
+                [site.Lattitude, site.Longitude],
+                siteStyles[site.ProjectStatus.toLowerCase()]
+            ).addTo(map);
+            
+            bounds.extend([site.Lattitude, site.Longitude]);
+            
+            marker.bindPopup(`
                     <div class="popup-content">
                         <h3>${site["Site\nName"] || "Unnamed Site"}</h3>
                         <p><strong>Status:</strong> ${site.ProjectStatus}</p>
@@ -94,11 +104,11 @@ fetch('data/remediation_projects.json')
         
         map.fitBounds(bounds, { padding: [20, 20] });
     });
-
-const legend = L.control({ position: 'bottomright' });
-legend.onAdd = function(map) {
-    const div = L.DomUtil.create('div', 'legend');
-    div.innerHTML = `
+    
+    const legend = L.control({ position: 'bottomright' });
+    legend.onAdd = function(map) {
+        const div = L.DomUtil.create('div', 'legend');
+        div.innerHTML = `
         <h4>Site Status</h4>
         <div class="legend-item">
             <span class="legend-marker active"></span>
@@ -109,6 +119,29 @@ legend.onAdd = function(map) {
             Closed
         </div>
     `;
-    return div;
+        return div;
+    };
+    legend.addTo(map);
+
+    // Add error handling
+const loadData = async () => {
+    try {
+        const [counties, sites] = await Promise.all([
+            fetch('data/colorado-counties.json').then(r => r.json()),
+            fetch('data/remediation_projects.json').then(r => r.json())
+        ]);
+        
+        // Process counties first
+        const countiesLayer = L.geoJSON(counties, {style: countyStyle}).addTo(map);
+        
+        // Then add labels and sites
+        addCountyLabels(counties);
+        addSites(sites);
+        
+    } catch (error) {
+        console.error('Error loading map data:', error);
+    }
 };
-legend.addTo(map);
+
+// Initialize
+document.addEventListener('DOMContentLoaded', loadData);

@@ -136,3 +136,7 @@ h1 {
 .popup-content p {
     margin: 5px 0;
 }
+
+.leaflet-control-attribution img {
+    display: none;
+}
