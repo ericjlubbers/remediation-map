@@ -215,26 +215,36 @@ const loadData = async () => {
 
 document.addEventListener('DOMContentLoaded', loadData);
 
-// Add this script to the bottom of your map.js file
+// Add this to the bottom of your map.js file
 document.addEventListener('DOMContentLoaded', function() {
     function sendHeight() {
-        const height = document.documentElement.offsetHeight;
+        // Get the actual content height
+        const mapElement = document.getElementById('map');
+        const footerElement = document.querySelector('.footer');
+        const mapHeight = mapElement.offsetHeight;
+        const footerHeight = footerElement.offsetHeight;
+        const totalHeight = mapHeight + footerHeight;
+
+        console.log('Sending height:', totalHeight);
+        
         window.parent.postMessage({
             type: 'resize',
-            height: height
+            height: totalHeight
         }, '*');
     }
 
-    // Send initial height
-    setTimeout(sendHeight, 1000);
+    // Send height after a short delay to ensure all elements are rendered
+    setTimeout(sendHeight, 500);
 
     // Send height after map loads
-    map.on('load', sendHeight);
+    map.on('load', function() {
+        setTimeout(sendHeight, 100);
+    });
     
-    // Send height after any zoom/pan
+    // Send height after any zoom/pan ends
     map.on('moveend', sendHeight);
     
-    // Send height on window resize
+    // Debounced resize handler
     let resizeTimeout;
     window.addEventListener('resize', function() {
         clearTimeout(resizeTimeout);
