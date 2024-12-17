@@ -118,10 +118,10 @@ const debouncedUpdateMarkerSizes = _.debounce(updateMarkerSizes, 250);
 
 function updateMapPadding() {
     const currentBounds = map.getBounds();
-    const padding = window.innerWidth <= 768 ? [20, 20] : [40, 40];
+    const padding = window.innerWidth <= 768 ? [10, 10] : [40, 40];
     map.fitBounds(currentBounds, {
         padding: padding,
-        maxZoom: 10,
+        maxZoom: window.innerWidth <= 768 ? 11 : 10,
         animate: false
     });
 }
@@ -171,6 +171,7 @@ const addSites = (data) => {
         return;
     }
     
+    // Calculate the bounds of all points
     const bounds = L.latLngBounds(
         validSites.map(site => [site.Lattitude, site.Longitude])
     );
@@ -205,9 +206,22 @@ const addSites = (data) => {
         }
     });
     
+    // Calculate center point of bounds
+    const center = bounds.getCenter();
+    const isMobile = window.innerWidth <= 768;
+    
+    // Adjust bounds for mobile to focus more on the central cluster
+    if (isMobile) {
+        // Shrink the bounds by 20% for mobile to zoom in more on the central cluster
+        const latSpread = (bounds.getNorth() - bounds.getSouth()) * 0.2;
+        const lngSpread = (bounds.getEast() - bounds.getWest()) * 0.2;
+        bounds.extend([center.lat + latSpread, center.lng + lngSpread]);
+        bounds.extend([center.lat - latSpread, center.lng - lngSpread]);
+    }
+    
     map.fitBounds(bounds, {
-        padding: window.innerWidth <= 768 ? [20, 20] : [40, 40],
-        maxZoom: 10
+        padding: isMobile ? [10, 10] : [40, 40],
+        maxZoom: isMobile ? 11 : 10
     });
 };
 

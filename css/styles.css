@@ -43,7 +43,7 @@ h1 {
     height: 0;
     padding-bottom: 85%;
     border-radius: var(--border-radius);
-    margin-bottom: calc(var(--spacing-base) * 2);
+    margin-bottom: calc(var(--spacing-base) * 1.5);
 }
 
 #map .leaflet-container {
@@ -52,25 +52,6 @@ h1 {
     left: 0;
     width: 100%;
     height: 100%;
-}
-
-.iframe-container {
-    position: relative;
-    width: 100%;
-    padding-bottom: 56.25%; /* 16:9 aspect ratio */
-    height: 0;
-    overflow: hidden;
-    border-radius: var(--border-radius);
-    margin-bottom: calc(var(--spacing-base) * 2);
-}
-
-.iframe-container iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border: 0;
 }
 
 .map-loading {
@@ -82,21 +63,29 @@ h1 {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
-    gap: var(--spacing-base);
+    padding: 0 10px;
+    min-height: 40px;
+    flex-wrap: nowrap;
 }
 
 .source {
     color: var(--color-text-secondary);
     font-family: var(--font-secondary);
     text-transform: uppercase;
-    font-size: clamp(0.7rem, 2vw, 0.9rem);
+    font-size: clamp(0.6rem, 1.8vw, 0.9rem);
+    margin-right: 10px;
+    flex: 1;
+    white-space: normal;
+}
+
+.logo {
+    flex-shrink: 0;
 }
 
 .logo img {
-    height: clamp(20px, 5vw, 30px);
+    height: clamp(18px, 4vw, 30px);
     width: auto;
-    max-width: 200px;
+    max-width: 150px;
 }
 
 .county-label {
@@ -182,32 +171,26 @@ h1 {
 /* Mobile Optimizations */
 @media (max-width: 768px) {
     body {
-        padding: calc(var(--spacing-base) * 1.5);
+        padding: calc(var(--spacing-base));
     }
 
     #map {
         padding-bottom: 100%;
-        margin-bottom: calc(var(--spacing-base) * 2);
+        margin-bottom: var(--spacing-base);
     }
     
     .legend {
         max-width: 130px;
         font-size: 11px;
         padding: 10px;
-        margin-bottom: 50px;
+        margin: 10px;
         right: 10px !important;
         bottom: 10px !important;
     }
 
-    .legend h4 {
-        font-size: 12px;
-        margin-bottom: 6px;
-    }
-
-    .legend-marker {
-        width: 12px;
-        height: 12px;
-        margin-right: 6px;
+    .footer {
+        padding: 0 5px;
+        min-height: 35px;
     }
 
     .county-label {
@@ -216,22 +199,6 @@ h1 {
 
     .county-label.weld-county {
         font-size: 14px;
-    }
-
-    .leaflet-control-zoom {
-        display: none;
-    }
-
-    .leaflet-popup-content {
-        margin: 10px;
-        max-width: 200px;
-    }
-}
-
-@media (min-width: 769px) {
-    .leaflet-control-container .leaflet-bottom.leaflet-right {
-        bottom: 20px;
-        right: 20px;
     }
 }
 
