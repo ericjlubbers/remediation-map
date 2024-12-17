@@ -118,7 +118,7 @@ const addSites = (data) => {
                 </div>
             `);
             
-            marker.on('mouseover', function() {
+            marker.on('click', function() {
                 this.openPopup();
             });
         } catch (error) {
