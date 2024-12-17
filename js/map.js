@@ -4,8 +4,8 @@ const debugLog = (message, data = null) => {
 
 const getMarkerRadius = () => {
     const width = window.innerWidth;
-    if (width <= 480) return 2.5;
-    if (width <= 768) return 3.5;
+    if (width <= 480) return 2;  // Smaller on mobile
+    if (width <= 768) return 3;
     return 5;
 };
 
@@ -116,12 +116,23 @@ const updateMarkerSizes = () => {
 
 const debouncedUpdateMarkerSizes = _.debounce(updateMarkerSizes, 250);
 
+function updateMapPadding() {
+    const currentBounds = map.getBounds();
+    const padding = window.innerWidth <= 768 ? [20, 20] : [40, 40];
+    map.fitBounds(currentBounds, {
+        padding: padding,
+        maxZoom: 10,
+        animate: false
+    });
+}
+
 function sendHeight() {
     const mapElement = document.getElementById('map');
     const footerElement = document.querySelector('.footer');
     const mapHeight = mapElement.offsetHeight;
     const footerHeight = footerElement.offsetHeight;
-    const totalHeight = mapHeight + footerHeight;
+    const extraSpace = window.innerWidth <= 768 ? 20 : 0;
+    const totalHeight = mapHeight + footerHeight + extraSpace;
     
     window.parent.postMessage({
         type: 'resize',
@@ -144,7 +155,8 @@ window.addEventListener('resize', () => {
         map.addControl(new L.Control.Zoom({ position: 'topleft' }));
     }
     
-    // Handle height update
+    // Update padding and send height
+    updateMapPadding();
     resizeTimeout = setTimeout(sendHeight, 250);
 });
 
@@ -194,12 +206,15 @@ const addSites = (data) => {
     });
     
     map.fitBounds(bounds, {
-        padding: [40, 40],
+        padding: window.innerWidth <= 768 ? [20, 20] : [40, 40],
         maxZoom: 10
     });
 };
 
-const legend = L.control({ position: 'bottomright' });
+const legend = L.control({ 
+    position: window.innerWidth <= 768 ? 'bottomleft' : 'bottomright' 
+});
+
 legend.onAdd = function(map) {
     const div = L.DomUtil.create('div', 'legend');
     div.innerHTML = `
